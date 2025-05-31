@@ -5,7 +5,8 @@ You can wrap any [`std::io::Read`] type in the `bytemuncher::Muncher<T>` type an
 bytemuncher methods for it, such as:
 - Reading various signed/unsigned integer types in various endianness (see `bytemuncher::Endianness`).
 - Reading floating point values in various endianness.
-- Reading strings in various formats
+- Reading strings in various formats (UTF-8, MUTF-8, UCS-2, raw bytes)
+  from various storage types (Null terminated, length prefix, newline, ...)
 
 For more information, see the documentation of `bytemuncher::Muncher` and its methods.
 
@@ -29,3 +30,9 @@ assert_eq!(muncher.read_bool().unwrap(), true);
 // End of data
 assert!(muncher.read_bool().is_err());
 ```
+
+# TODO
+- [x] Add MUTF-8 support (crate feature: `mutf8`)
+- [ ] Add `tokio` async read support
+- [ ] Add destinations for reading strings into
+- [ ] Add test suite

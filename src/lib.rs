@@ -11,7 +11,8 @@ mod mutf;
 /// bytemuncher methods for it, such as:
 /// - Reading various signed/unsigned integer types in various endianness (see [`Endianness`]).
 /// - Reading floating point values in various endianness.
-/// - Reading strings in various formats
+/// - Reading strings in various formats (UTF-8, MUTF-8, UCS-2, raw bytes)
+//    from various storage types (Null terminated, length prefix, newline, ...)
 ///
 /// # Example
 /// ```
@@ -80,7 +81,7 @@ mod mutf;
 /// Specifies where to store the data to. If it's not specified then
 /// that usually means a new heap-allocated buffer ([`String`] or [`Vec`])
 /// is made. Otherwise:
-/// - `to`: Writes to a `&mut String` or `&mut Vec`
+/// - `to`: (TODO) Writes to a `&mut String` or `&mut Vec`
 /// - `to_exact`: (TODO) Writes to any `&mut [u8]`,
 ///   returns `bool` if it fit in or not.
 ///
