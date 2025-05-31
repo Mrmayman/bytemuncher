@@ -4,6 +4,7 @@ mod impls;
 mod io_read;
 #[cfg(feature = "mutf8")]
 mod mutf;
+mod traits;
 
 /// A helpful wrapper around anything that implements [`std::io::Read`].
 ///
@@ -25,14 +26,14 @@ mod mutf;
 /// ];
 /// let mut muncher = Muncher::new(Cursor::new(data));
 ///
-/// assert_eq!(muncher.read_u16_le().unwrap(), 0x1234);
-/// assert_eq!(muncher.read_u16_be().unwrap(), 0x5678);
+/// assert_eq!(muncher.read_le::<u16>().unwrap(), 0x1234);
+/// assert_eq!(muncher.read_be::<u16>().unwrap(), 0x5678);
 ///
-/// assert_eq!(muncher.read_bool().unwrap(), false);
-/// assert_eq!(muncher.read_bool().unwrap(), true);
+/// assert_eq!(muncher.read_le::<u8>().unwrap(), 0);
+/// assert_eq!(muncher.read_le::<u8>().unwrap(), 1);
 ///
 /// // End of data
-/// assert!(muncher.read_bool().is_err());
+/// assert!(muncher.read_le::<u8>().is_err());
 /// ```
 ///
 /// # Errors
@@ -147,5 +148,8 @@ pub const IS_LITTLE_ENDIAN: bool = false;
 pub use mutf::MutfError;
 #[cfg(feature = "mutf8")]
 pub use mutf8::error::Error as MutfInnerError;
+
 // #[cfg(feature = "mutf8")]
 // pub use mutf8::{mutf8_to_utf8, utf8_to_mutf8};
+
+pub use traits::ReadEndian;

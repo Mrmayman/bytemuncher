@@ -21,14 +21,13 @@ let data = [
 ];
 let mut muncher = Muncher::new(Cursor::new(data));
 
-assert_eq!(muncher.read_u16_le().unwrap(), 0x1234);
-assert_eq!(muncher.read_u16_be().unwrap(), 0x5678);
+assert_eq!(muncher.read_le::<u16>().unwrap(), 0x1234);
+assert_eq!(muncher.read_be::<u16>().unwrap(), 0x5678);
 
-assert_eq!(muncher.read_bool().unwrap(), false);
-assert_eq!(muncher.read_bool().unwrap(), true);
-
+assert_eq!(muncher.read_le::<u8>().unwrap(), 0);
+assert_eq!(muncher.read_le::<u8>().unwrap(), 1);
 // End of data
-assert!(muncher.read_bool().is_err());
+assert!(muncher.read_le::<u8>().is_err());
 ```
 
 # TODO

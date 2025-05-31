@@ -1,21 +1,31 @@
-use crate::{Endianness, Muncher};
+use crate::{Endianness, Muncher, ReadEndian};
 use std::io::{BufRead, Error, ErrorKind, Read};
 
 /// **Size-prefixed string methods**
 impl<T: Read> Muncher<T> {
-    /// Reads a UTF-8 string prefixed by a `u16` length (number of bytes).
+    /// Reads some bytes prefixed by a length (number of bytes) of type `<E>`.
     ///
     /// Through the `end` argument you can choose the endianness of the length field.
     ///
     /// For more info on endianness see [`crate::Endianness`].
-    pub fn read_size16_utf8(&mut self, end: Endianness) -> Result<String, Error> {
-        let len = self.read_u16_endian(end)?;
-        let mut buf = vec![0u8; len as usize];
+    pub fn read_pref_bytes<E: ReadEndian>(&mut self, end: Endianness) -> Result<Vec<u8>, Error> {
+        let len = self.read_m::<E>(end)?;
+        let mut buf = vec![0u8; len.into_usize()];
         self.reader.read_exact(&mut buf)?;
-        String::from_utf8(buf).map_err(|e| Error::new(ErrorKind::InvalidData, e))
+        Ok(buf)
     }
 
-    /// Reads a UCS-2 string prefixed by a `u16` length (number of characters).
+    /// Reads a UTF-8 string prefixed by a length (number of bytes) of type `<E>`.
+    ///
+    /// Through the `end` argument you can choose the endianness of the length field.
+    ///
+    /// For more info on endianness see [`crate::Endianness`].
+    pub fn read_pref_utf8<E: ReadEndian>(&mut self, end: Endianness) -> Result<String, Error> {
+        String::from_utf8(self.read_pref_bytes::<E>(end)?)
+            .map_err(|e| Error::new(ErrorKind::InvalidData, e))
+    }
+
+    /// Reads a UCS-2 string prefixed by a length (number of characters) in the type `<E>`.
     ///
     /// UCS-2 consists of big endian 16-bit words, each of which represent a Unicode
     /// code point between U+0000 and U+FFFF inclusive.
@@ -23,44 +33,12 @@ impl<T: Read> Muncher<T> {
     /// Through the `end` argument you can choose the endianness of the length field.
     ///
     /// For more info on endianness see [`crate::Endianness`].
-    pub fn read_size16_ucs2(&mut self, end: Endianness) -> Result<String, Error> {
-        let char_count = self.read_u16_endian(end)?;
-        let mut result = String::with_capacity(char_count as usize);
+    pub fn read_pref_ucs2<E: ReadEndian>(&mut self, end: Endianness) -> Result<String, Error> {
+        let char_count = self.read_m::<E>(end)?.into_usize();
+        let mut result = String::with_capacity(char_count);
 
         for _ in 0..char_count {
-            let code_unit = self.read_u16_be()?; // UCS-2 is always big-endian
-            match char::from_u32(code_unit as u32) {
-                Some(ch) => result.push(ch),
-                None => {
-                    return Err(Error::new(
-                        ErrorKind::InvalidData,
-                        format!("Invalid UCS-2 code unit: {:#X}", code_unit),
-                    ));
-                }
-            }
-        }
-
-        Ok(result)
-    }
-
-    /// Reads a UTF-8 string prefixed by a `u8` length (number of bytes).
-    pub fn read_size8_utf8(&mut self) -> Result<String, Error> {
-        let len = self.read_u8()?;
-        let mut buf = vec![0u8; len as usize];
-        self.reader.read_exact(&mut buf)?;
-        String::from_utf8(buf).map_err(|e| Error::new(ErrorKind::InvalidData, e))
-    }
-
-    /// Reads a UCS-2 string prefixed by a `u8` length (number of characters).
-    ///
-    /// UCS-2 consists of big endian 16-bit words, each of which represent a Unicode
-    /// code point between U+0000 and U+FFFF inclusive.
-    pub fn read_size8_ucs2(&mut self) -> Result<String, Error> {
-        let char_count = self.read_u8()?;
-        let mut result = String::with_capacity(char_count as usize);
-
-        for _ in 0..char_count {
-            let code_unit = self.read_u16_be()?; // UCS-2 is always big-endian
+            let code_unit = self.read_be::<u16>()?; // UCS-2 is always big-endian
             match char::from_u32(code_unit as u32) {
                 Some(ch) => result.push(ch),
                 None => {

@@ -1,6 +1,6 @@
 use std::io::{BufRead, Read};
 
-use crate::{Endianness, Muncher};
+use crate::{Endianness, Muncher, ReadEndian};
 
 mod error;
 
@@ -8,29 +8,20 @@ pub use error::MutfError;
 
 /// **Size-prefixed MUTF-8 string methods**
 impl<T: Read> Muncher<T> {
-    /// Reads a MUTF-8 string prefixed by a `u16` length (number of bytes),
+    /// Reads a MUTF-8 string prefixed by a length (number of bytes) of type `<E>`,
     /// then converts it to a UTF-8 [`String`].
     /// For most cases, this is not what you need and you should instead use
     /// UTF-8.
+    ///
+    /// If you want raw MUTF-8, use [`Muncher::read_pref_bytes`].
     ///
     /// Through the `end` argument you can choose the endianness of the length field.
     ///
     /// For more info on endianness see [`crate::Endianness`].
     ///
     /// For more info on MUTF-8 see <https://crates.io/crates/mutf8>.
-    pub fn read_size16_mutf8(&mut self, end: Endianness) -> Result<String, MutfError> {
-        let buf = self.read_size16_mutf8(end)?;
-        mutf2utf(&buf)
-    }
-
-    /// Reads a MUTF-8 string prefixed by a `u8` length (number of bytes),
-    /// then converts it to a UTF-8 [`String`].
-    /// For most cases, this is not what you need and you should instead use
-    /// UTF-8.
-    ///
-    /// For more info on MUTF-8 see <https://crates.io/crates/mutf8>.
-    pub fn read_size8_mutf8(&mut self) -> Result<String, MutfError> {
-        let buf = self.read_size8_mutf8()?;
+    pub fn read_pref_mutf8<E: ReadEndian>(&mut self, end: Endianness) -> Result<String, MutfError> {
+        let buf = self.read_pref_bytes::<E>(end)?;
         mutf2utf(&buf)
     }
 }
