@@ -142,7 +142,7 @@ impl Endianness {
 #[cfg(target_endian = "little")]
 pub const IS_TARGET_LITTLE_ENDIAN: bool = true;
 #[cfg(target_endian = "big")]
-pub const IS_LITTLE_ENDIAN: bool = false;
+pub const IS_TARGET_LITTLE_ENDIAN: bool = false;
 
 #[cfg(feature = "mutf8")]
 pub use mutf::MutfError;
