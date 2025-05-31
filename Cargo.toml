@@ -7,5 +7,5 @@ edition = "2024"
 mutf8 = { version = "0.5", default-features = false, optional = true }
 
 [features]
-default = []
+default = ["mutf8"]
 mutf8 = ["dep:mutf8"]
