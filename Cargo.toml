@@ -1,0 +1,11 @@
+[package]
+name = "bytemuncher"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+mutf8 = { version = "0.5", default-features = false, optional = true }
+
+[features]
+default = []
+mutf8 = ["dep:mutf8"]
