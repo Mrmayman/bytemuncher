@@ -1,4 +1,4 @@
-use crate::{Endianness, Muncher, ReadEndian};
+use crate::{End, Muncher, ReadEndian};
 use std::io::{BufRead, Error, ErrorKind, Read};
 
 /// **Size-prefixed string methods**
@@ -7,8 +7,8 @@ impl<T: Read> Muncher<T> {
     ///
     /// Through the `end` argument you can choose the endianness of the length field.
     ///
-    /// For more info on endianness see [`crate::Endianness`].
-    pub fn read_pref_bytes<E: ReadEndian>(&mut self, end: Endianness) -> Result<Vec<u8>, Error> {
+    /// For more info on endianness see [`crate::End`].
+    pub fn read_pref_bytes<E: ReadEndian>(&mut self, end: End) -> Result<Vec<u8>, Error> {
         let len = self.read_m::<E>(end)?;
         let mut buf = vec![0u8; len.into_usize()];
         self.reader.read_exact(&mut buf)?;
@@ -19,8 +19,8 @@ impl<T: Read> Muncher<T> {
     ///
     /// Through the `end` argument you can choose the endianness of the length field.
     ///
-    /// For more info on endianness see [`crate::Endianness`].
-    pub fn read_pref_utf8<E: ReadEndian>(&mut self, end: Endianness) -> Result<String, Error> {
+    /// For more info on endianness see [`crate::End`].
+    pub fn read_pref_utf8<E: ReadEndian>(&mut self, end: End) -> Result<String, Error> {
         String::from_utf8(self.read_pref_bytes::<E>(end)?)
             .map_err(|e| Error::new(ErrorKind::InvalidData, e))
     }
@@ -32,8 +32,8 @@ impl<T: Read> Muncher<T> {
     ///
     /// Through the `end` argument you can choose the endianness of the length field.
     ///
-    /// For more info on endianness see [`crate::Endianness`].
-    pub fn read_pref_ucs2<E: ReadEndian>(&mut self, end: Endianness) -> Result<String, Error> {
+    /// For more info on endianness see [`crate::End`].
+    pub fn read_pref_ucs2<E: ReadEndian>(&mut self, end: End) -> Result<String, Error> {
         let char_count = self.read_m::<E>(end)?.into_usize();
         let mut result = String::with_capacity(char_count);
 

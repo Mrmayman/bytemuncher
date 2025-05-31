@@ -5,7 +5,7 @@ macro_rules! impl_float {
         impl ReadEndian for $type {
             fn read_endian(
                 reader: &mut impl std::io::Read,
-                end: crate::Endianness,
+                end: crate::End,
             ) -> Result<Self, std::io::Error> {
                 let mut buf = [0u8; std::mem::size_of::<Self>()];
                 reader.read_exact(&mut buf)?;

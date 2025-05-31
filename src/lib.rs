@@ -10,7 +10,7 @@ mod traits;
 ///
 /// You can put in any [`std::io::Read`] type and get access to the additional
 /// bytemuncher methods for it, such as:
-/// - Reading various signed/unsigned integer types in various endianness (see [`Endianness`]).
+/// - Reading various signed/unsigned integer types in various endianness (see [`End`]).
 /// - Reading floating point values in various endianness.
 /// - Reading strings in various formats (UTF-8, MUTF-8, UCS-2, raw bytes)
 //    from various storage types (Null terminated, length prefix, newline, ...)
@@ -108,33 +108,96 @@ impl<T> Muncher<T> {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub enum Endianness {
+/// The endianness of a value.
+///
+/// Endianness represents the order
+/// in which a number may be stored as bytes.
+///
+/// For example, the number `0x12345678` may be
+/// stored in memory as:
+/// - `0x12, 0x34, 0x56, 0x78` in big endian
+/// - `0x78, 0x56, 0x34, 0x12` in little endian
+///
+/// Big endian is commonly found in network packets
+/// and some file formats.
+///
+/// Little endian is the "native" format for most CPUs,
+/// and some file formats use it.
+///
+/// Here, If you use native endian, the default endianness
+/// (little/big) of your computer's CPU will be used.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum End {
+    /// In little endian, the most significant byte appears
+    /// as the last byte. You can think of this as an
+    /// **opposite** of the "human-readable" order.
+    ///
+    /// the number `0x12345678` may be stored in memory as:
+    /// `0x78, 0x56, 0x34, 0x12` in little endian
+    ///
+    /// Little endian is the "native" format for most CPUs,
+    /// and some file formats use it.
     Little,
+    /// In big endian, the most significant byte appears
+    /// as the first byte. You can think of this as a
+    /// "human-readable" order.
+    ///
+    /// the number `0x12345678` may be stored in memory as:
+    /// `0x12, 0x34, 0x56, 0x78` in big endian
+    ///
+    /// Big endian is commonly found in network packets
+    /// and some file formats.
     Big,
+    /// Here, "Native" endian refers to the default endianness
+    /// (little/big) of your computer's CPU will be used.
+    ///
+    /// So either Little (likely) or Big (unlikely) will
+    /// automatically be picked based on your computer.
+    ///
+    /// If you want to check whether your CPU is little
+    /// endian or not, use the [`IS_TARGET_LITTLE_ENDIAN`]
+    /// constant.
     Native,
 }
 
-impl Endianness {
+impl End {
+    /// Checks whether the value is little endian or not.
+    ///
+    /// Automatically works for [`End::Native`] so this could
+    /// be useful.
     pub fn is_le(self) -> bool {
         match self {
-            Endianness::Little => true,
-            Endianness::Big => false,
-            Endianness::Native => IS_TARGET_LITTLE_ENDIAN,
+            End::Little => true,
+            End::Big => false,
+            End::Native => IS_TARGET_LITTLE_ENDIAN,
         }
     }
 
+    /// Returns the "opposite" endianness of `self`;
+    /// ie. it flips Little to Big and vice versa.
+    ///
+    /// It automatically works with [`End::Native`].
     pub fn opposite(self) -> Self {
         match self {
-            Endianness::Little => Endianness::Big,
-            Endianness::Big => Endianness::Little,
-            Endianness::Native => {
+            End::Little => End::Big,
+            End::Big => End::Little,
+            End::Native => {
                 if IS_TARGET_LITTLE_ENDIAN {
-                    Endianness::Big
+                    End::Big
                 } else {
-                    Endianness::Little
+                    End::Little
                 }
             }
+        }
+    }
+
+    /// Checks whether the given endianness is
+    /// equal to your CPU's native endianness.
+    pub fn is_target_endian(self) -> bool {
+        match self {
+            End::Little => IS_TARGET_LITTLE_ENDIAN,
+            End::Big => !IS_TARGET_LITTLE_ENDIAN,
+            End::Native => true,
         }
     }
 }

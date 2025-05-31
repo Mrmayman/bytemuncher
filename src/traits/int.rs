@@ -6,7 +6,7 @@ macro_rules! impl_small_int {
             // Ignoring endianness here as it doesn't matter
             fn read_endian(
                 reader: &mut impl std::io::Read,
-                _: crate::Endianness,
+                _: crate::End,
             ) -> Result<Self, std::io::Error>
             where
                 Self: Sized,
@@ -28,7 +28,7 @@ macro_rules! impl_int {
         impl ReadEndian for $type {
             fn read_endian(
                 reader: &mut impl std::io::Read,
-                end: crate::Endianness,
+                end: crate::End,
             ) -> Result<Self, std::io::Error>
             where
                 Self: Sized,
@@ -63,3 +63,9 @@ impl_int!(i64);
 
 impl_int!(u128);
 impl_int!(i128);
+
+// Not implemented, because if you're parsing binary formats
+// you better know the type size beforehand!
+
+// impl_int!(usize);
+// impl_int!(isize);

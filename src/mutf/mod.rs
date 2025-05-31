@@ -1,6 +1,6 @@
 use std::io::{BufRead, Read};
 
-use crate::{Endianness, Muncher, ReadEndian};
+use crate::{End, Muncher, ReadEndian};
 
 mod error;
 
@@ -17,10 +17,10 @@ impl<T: Read> Muncher<T> {
     ///
     /// Through the `end` argument you can choose the endianness of the length field.
     ///
-    /// For more info on endianness see [`crate::Endianness`].
+    /// For more info on endianness see [`crate::End`].
     ///
     /// For more info on MUTF-8 see <https://crates.io/crates/mutf8>.
-    pub fn read_pref_mutf8<E: ReadEndian>(&mut self, end: Endianness) -> Result<String, MutfError> {
+    pub fn read_pref_mutf8<E: ReadEndian>(&mut self, end: End) -> Result<String, MutfError> {
         let buf = self.read_pref_bytes::<E>(end)?;
         mutf2utf(&buf)
     }
