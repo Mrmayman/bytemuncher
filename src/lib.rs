@@ -1,4 +1,4 @@
-#![doc = "../README.md"]
+#![doc = include_str!("../README.md")]
 
 mod impls;
 mod io_read;
@@ -6,7 +6,7 @@ mod io_read;
 mod mutf;
 mod traits;
 
-/// A helpful wrapper around anything that implements [`std::io::Read`].
+/// A helpful wrapper around any [`std::io::Read`] type.
 ///
 /// You can put in any [`std::io::Read`] type and get access to the additional
 /// bytemuncher methods for it, such as:
@@ -35,6 +35,8 @@ mod traits;
 /// // End of data
 /// assert!(muncher.read_le::<u8>().is_err());
 /// ```
+///
+/// For more examples see the crate documentation.
 ///
 /// # Errors
 /// All methods return [`std::io::Error`] on failure, except
@@ -209,10 +211,12 @@ pub const IS_TARGET_LITTLE_ENDIAN: bool = false;
 
 #[cfg(feature = "mutf8")]
 pub use mutf::MutfError;
+/// Important exports of the `mutf8` crate
 #[cfg(feature = "mutf8")]
-pub use mutf8::error::Error as MutfInnerError;
-
-// #[cfg(feature = "mutf8")]
-// pub use mutf8::{mutf8_to_utf8, utf8_to_mutf8};
+pub mod mutf_8 {
+    pub use mutf8::error::Error as MutfInnerError;
+    pub use mutf8::error::{Expected, Mode, Position};
+    pub use mutf8::{mutf8_to_utf8, utf8_to_mutf8};
+}
 
 pub use traits::ReadEndian;
