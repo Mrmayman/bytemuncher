@@ -11,6 +11,7 @@ bytemuncher methods for it, such as:
 For more information, see the documentation of `bytemuncher::Muncher` and its methods.
 
 # Example
+## Numbers
 ```rust
 use bytemuncher::Muncher;
 use std::io::Cursor;
@@ -32,7 +33,17 @@ assert_eq!(muncher.read_le::<u8>().unwrap(), 1);
 assert!(muncher.read_le::<u8>().is_err());
 ```
 
-This library supports much more, like strings.
+## Strings
+```rust
+use bytemuncher::Muncher;
+use std::io::Cursor;
+
+let data = b"hello world\0goodbye world";
+let mut muncher = Muncher::new(Cursor::new(data));
+
+assert_eq!(muncher.read_cstr_utf8().unwrap(), "hello world");
+assert_eq!(muncher.read_cstr_utf8().unwrap(), "goodbye world");
+```
 
 # Why not [byteorder](https://crates.io/crate/byteorder)?
 `byteorder` and `bytemuncher` have similar, but slightly divergent goals.
@@ -55,19 +66,31 @@ I'm always happy to merge!)
 
 ```rust
 use std::io::Read;
+use bytemuncher::Muncher;
 
-pub trait ParseSomething {
-    fn read_something(&mut self) -> Result<Something, SomeError>;
+struct Vec2 {
+    a: f32,
+    b: f32,
 }
 
-impl<T: Read> ParseSomething for Muncher<T> {
-    fn read_something(&mut self) -> Result<Something, SomeError> {
-        let buf = Vec::new();
-        self.read(&mut buf)?; // or use some other Read method
+pub trait ParseVec2 {
+    fn read_vec2(&mut self) -> Result<Vec2, std::io::Error>;
+}
+
+impl<T: Read> ParseVec2 for Muncher<T> {
+    fn read_vec2(&mut self) -> Result<Vec2, std::io::Error> {
+        let a = self.read_le::<f32>()?;
+        let b = self.read_le::<f32>()?;
+
+        // you can also call the underlying I/O traits
+
+        // let buf = Vec::new();
+        // self.read(&mut buf)?;
+
+        // or use some other Read method
         // you can even use BufRead if T implements it
 
-        let something = do_something(buf)?;
-        Ok(something)
+        Ok(Vec2 { a, b })
     }
 }
 ```
