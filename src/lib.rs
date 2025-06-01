@@ -13,7 +13,10 @@ mod traits;
 /// - Reading various signed/unsigned integer types in various endianness (see [`End`]).
 /// - Reading floating point values in various endianness.
 /// - Reading strings in various formats (UTF-8, MUTF-8, UCS-2, raw bytes)
-//    from various storage types (Null terminated, length prefix, newline, ...)
+///   from various storage types (Null terminated, length prefix, fixed size, newline, ...)
+///
+/// You can put in any [`std::io::BufRead`] type, or use a [`std::io::BufReader`]
+/// inside a `Muncher<T>` for extra features (shown later below).
 ///
 /// # Example
 /// ```
@@ -43,21 +46,25 @@ mod traits;
 /// for MUTF-8 methods (crate feature: `mutf8`) which return `MutfError`
 /// on failure.
 ///
-/// They can come from:
+/// Errors can come from:
 /// - I/O errors from the underlying reader
 /// - Unexpected end-of-input
 /// - Invalid encoding (e.g., malformed UTF-8 or MUTF-8)
 ///
 /// # Note on strings
 /// The string-related methods are named in the
-/// `read_<format>_<encoding>[_destination]` scheme.
+/// `read_<format>_<encoding>[_destination]` naming convention.
+///
+/// These are useful not just for strings but for reading any
+/// arbitrary byte buffers with different length encodings.
 ///
 /// ## Format
 /// Specifies how the size of the string is found.
 /// It can be one of:
-/// - `size8`/`size16`: A u8 or u16 prefix before the
-///   contents indicating the length of the string.
-/// - `cstr`: The string ends with a null `\0` byte.
+/// - `fixed`: You manually specify the size of the string as an argument.
+/// - `pref`: A number prefix before the string indicating its
+///    length, can be in any integer/float generic type.
+/// - `cstr` (`BufRead` only): The string ends with a null `\0` byte.
 /// - `line` (`BufRead` only): Reads till a newline or end-of-file is met.
 /// - `delim` (`BufRead` only): Reads till the byte specified in the argument
 ///   is met or the input has ended, and returns a string containing the byte if found.
@@ -68,8 +75,8 @@ mod traits;
 /// - `bytes`: Returns a raw `Vec<u8>` containing the bytes,
 ///   feel free to interpret as you wish.
 /// - `utf8`: Reads and returns a UTF-8 encoded [`String`]
-///   (tries to parse, fails if invalid). This is the default
-///   rust type of string.
+///   (tries to parse, fails if invalid). **This is the default
+///   rust type of string**.
 /// - `mutf8`: (with crate feature `mutf8`)
 ///   Reads a MUTF-8 encoded string and converts it to
 ///   a UTF-8 [`String`]. This is usually not used unless
@@ -81,9 +88,9 @@ mod traits;
 /// a Unicode code point between U+0000 and U+FFFF inclusive.
 ///
 /// ## Destination (optional)
-/// Specifies where to store the data to. If it's not specified then
-/// that usually means a new heap-allocated buffer ([`String`] or [`Vec`])
-/// is made. Otherwise:
+/// Specifies where to store the output data to.
+/// - (None specified): Allocates a new heap allocated buffer
+///   ([`String`] or [`Vec`])
 /// - `to`: (TODO) Writes to a `&mut String` or `&mut Vec`
 /// - `to_exact`: (TODO) Writes to any `&mut [u8]`,
 ///   returns `bool` if it fit in or not.
@@ -96,11 +103,11 @@ pub struct Muncher<T> {
 
 impl<T> Muncher<T> {
     /// Creates a new [`Muncher`] with the default configuration:
-    /// - Allocation limit of 1 GB [`Muncher::set_max_alloc`]
-    /// More coming in the future.
+    /// - Allocation limit of 1 GB: [`Muncher::set_max_alloc`]
     ///
-    /// If you want to iterate over some `[u8]`
-    /// then use
+    /// ... with more options coming in the future.
+    ///
+    /// If you want to iterate over some `[u8]` then use
     /// ```no_run
     /// # use bytemuncher::Muncher;
     /// # let SOMETHING = [0];
