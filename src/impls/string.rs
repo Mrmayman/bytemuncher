@@ -55,14 +55,29 @@ impl<T: Read> Muncher<T> {
         let mut result = String::with_capacity(char_count);
 
         for _ in 0..char_count {
-            let code_unit = self.read_be::<u16>()?; // UCS-2 is always big-endian
-            match char::from_u32(code_unit as u32) {
-                Some(ch) => result.push(ch),
-                None => {
-                    return Err(Error::new(
-                        ErrorKind::InvalidData,
-                        format!("Invalid UCS-2 code unit: {:#X}", code_unit),
-                    ));
+            let ch = self.read_be::<u16>()?; // UCS-2 is always big-endian
+
+            // Based on:
+            // https://github.com/rust-osdev/ucs2-rs/blob/aa837529a4999e8c7eacb326fd153cc52792814b/src/lib.rs#L151
+            match ch {
+                0..128 => {
+                    result.push(ch as u8 as char);
+                }
+                128..2048 => {
+                    let first = 0b1100_0000 + ((ch >> 6) & 0b0001_1111) as u8;
+                    let last = 0b1000_0000 + (ch & 0b0011_1111) as u8;
+
+                    result.push(first as char);
+                    result.push(last as char);
+                }
+                _ => {
+                    let first = 0b1110_0000 + ((ch >> 12) & 0b0000_1111) as u8;
+                    let mid = 0b1000_0000 + ((ch >> 6) & 0b0011_1111) as u8;
+                    let last = 0b1000_0000 + (ch & 0b0011_1111) as u8;
+
+                    result.push(first as char);
+                    result.push(mid as char);
+                    result.push(last as char);
                 }
             }
         }
