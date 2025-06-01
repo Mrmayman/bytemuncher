@@ -9,10 +9,25 @@ impl<T: Read> Muncher<T> {
     ///
     /// For more info on endianness see [`crate::End`].
     pub fn read_pref_bytes<E: ReadEndian>(&mut self, end: End) -> Result<Vec<u8>, Error> {
-        let len = self.read_m::<E>(end)?;
-        let mut buf = vec![0u8; len.into_usize()];
+        let len = self.read_m::<E>(end)?.into_usize();
+        self.verify_len(len)?;
+        let mut buf = vec![0u8; len];
         self.reader.read_exact(&mut buf)?;
         Ok(buf)
+    }
+
+    fn verify_len(&mut self, len: usize) -> Result<(), Error> {
+        if len > self.alloc_limit_bytes {
+            Err(Error::new(
+                ErrorKind::InvalidData,
+                format!(
+                    "length of string is too large ({len} bytes): surpassed the default (customizable) limit of {} bytes",
+                    self.alloc_limit_bytes
+                ),
+            ))
+        } else {
+            Ok(())
+        }
     }
 
     /// Reads a UTF-8 string prefixed by a length (number of bytes) of type `<E>`.
@@ -35,6 +50,7 @@ impl<T: Read> Muncher<T> {
     /// For more info on endianness see [`crate::End`].
     pub fn read_pref_ucs2<E: ReadEndian>(&mut self, end: End) -> Result<String, Error> {
         let char_count = self.read_m::<E>(end)?.into_usize();
+        self.verify_len(char_count * 2)?;
         let mut result = String::with_capacity(char_count);
 
         for _ in 0..char_count {

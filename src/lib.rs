@@ -91,10 +91,13 @@ mod traits;
 /// More destinations may come in future versions.
 pub struct Muncher<T> {
     reader: T,
+    alloc_limit_bytes: usize,
 }
 
 impl<T> Muncher<T> {
-    /// Creates a new [`Muncher`].
+    /// Creates a new [`Muncher`] with the default configuration:
+    /// - Allocation limit of 1 GB [`Muncher::set_max_alloc`]
+    /// More coming in the future.
     ///
     /// If you want to iterate over some `[u8]`
     /// then use
@@ -106,7 +109,23 @@ impl<T> Muncher<T> {
     /// # ;
     /// ```
     pub fn new(reader: T) -> Self {
-        Self { reader }
+        Self {
+            reader,
+            alloc_limit_bytes: 1 * 1024 * 1024 * 1024,
+        }
+    }
+
+    /// Sets a custom memory allocation limit (in bytes) for the [`Muncher`].
+    /// This limits how much memory can be allocated when reading bytes.
+    ///
+    /// Default: 1 GB
+    ///
+    /// This prevents the scenario where if you take in garbage data
+    /// and interpret it as the length, this could allocate terabytes of memory
+    /// and crash.
+    pub fn set_max_alloc(&mut self, alloc_limit_bytes: usize) -> &mut Self {
+        self.alloc_limit_bytes = alloc_limit_bytes;
+        self
     }
 }
 
