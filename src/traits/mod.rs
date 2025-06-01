@@ -9,14 +9,21 @@ mod int;
 /// that can be read through bytemuncher. It's implemented
 /// for all integer (`i*` and `u*`) and floating point (`f*`)
 /// types.
-///
-/// If your type is a single byte you can ignore the `end` field
-/// of the `read_endian` function.
 pub trait ReadEndian {
+    /// If your type is a single byte you can ignore the `end` field
+    /// of the `read_endian` function.
     fn read_endian(reader: &mut impl Read, end: End) -> Result<Self, std::io::Error>
     where
         Self: Sized;
 
+    /// Try to "semantically" convert your type to usize.
+    /// Any overflows, truncations and stuff can be ignored.
+    ///
+    /// If your type isn't really a number
+    /// feel free to return `0`.
+    ///
+    /// For an idea of how to use this, this will
+    /// primarily be used for array length.
     fn into_usize(self) -> usize;
 }
 

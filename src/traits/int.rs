@@ -13,9 +13,12 @@ macro_rules! impl_small_int {
             {
                 let mut buf = [0];
                 reader.read_exact(&mut buf)?;
+                #[allow(clippy::cast_possible_wrap)]
                 Ok(buf[0] as Self)
             }
 
+            #[allow(clippy::cast_sign_loss)]
+            #[allow(clippy::cast_possible_truncation)]
             fn into_usize(self) -> usize {
                 self as usize
             }
@@ -42,6 +45,8 @@ macro_rules! impl_int {
                 })
             }
 
+            #[allow(clippy::cast_sign_loss)]
+            #[allow(clippy::cast_possible_truncation)]
             fn into_usize(self) -> usize {
                 self as usize
             }

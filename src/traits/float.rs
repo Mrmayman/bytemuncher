@@ -17,6 +17,8 @@ macro_rules! impl_float {
                 Ok(Self::from_bits(bits))
             }
 
+            #[allow(clippy::cast_sign_loss)]
+            #[allow(clippy::cast_possible_truncation)]
             fn into_usize(self) -> usize {
                 self as usize
             }

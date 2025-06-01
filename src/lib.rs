@@ -1,9 +1,11 @@
 #![doc = include_str!("../README.md")]
+#![allow(clippy::missing_errors_doc)]
 
-mod impls;
-mod io_read;
 #[cfg(feature = "mutf8")]
 mod mutf;
+
+mod io_read;
+mod string;
 mod traits;
 
 /// A helpful wrapper around any [`std::io::Read`] type.
@@ -63,7 +65,7 @@ mod traits;
 /// It can be one of:
 /// - `fixed`: You manually specify the size of the string as an argument.
 /// - `pref`: A number prefix before the string indicating its
-///    length, can be in any integer/float generic type.
+///   length, can be in any integer/float generic type.
 /// - `cstr` (`BufRead` only): The string ends with a null `\0` byte.
 /// - `line` (`BufRead` only): Reads till a newline or end-of-file is met.
 /// - `delim` (`BufRead` only): Reads till the byte specified in the argument
@@ -118,7 +120,7 @@ impl<T> Muncher<T> {
     pub fn new(reader: T) -> Self {
         Self {
             reader,
-            alloc_limit_bytes: 1 * 1024 * 1024 * 1024,
+            alloc_limit_bytes: 1024 * 1024 * 1024,
         }
     }
 
@@ -193,6 +195,7 @@ impl End {
     ///
     /// Automatically works for [`End::Native`] so this could
     /// be useful.
+    #[must_use]
     pub fn is_le(self) -> bool {
         match self {
             End::Little => true,
@@ -205,6 +208,7 @@ impl End {
     /// ie. it flips Little to Big and vice versa.
     ///
     /// It automatically works with [`End::Native`].
+    #[must_use]
     pub fn opposite(self) -> Self {
         match self {
             End::Little => End::Big,
@@ -221,6 +225,7 @@ impl End {
 
     /// Checks whether the given endianness is
     /// equal to your CPU's native endianness.
+    #[must_use]
     pub fn is_target_endian(self) -> bool {
         match self {
             End::Little => IS_TARGET_LITTLE_ENDIAN,

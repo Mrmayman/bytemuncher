@@ -61,6 +61,7 @@ impl<T: Read> Muncher<T> {
             // https://github.com/rust-osdev/ucs2-rs/blob/aa837529a4999e8c7eacb326fd153cc52792814b/src/lib.rs#L151
             match ch {
                 0..128 => {
+                    #[allow(clippy::cast_possible_truncation)]
                     result.push(ch as u8 as char);
                 }
                 128..2048 => {
