@@ -10,24 +10,15 @@ impl<T: Read> Muncher<T> {
     /// For more info on endianness see [`crate::End`].
     pub fn read_pref_bytes<E: ReadEndian>(&mut self, end: End) -> Result<Vec<u8>, Error> {
         let len = self.read_m::<E>(end)?.into_usize();
+        self.read_fixed_bytes(len)
+    }
+
+    /// Reads `len` number of bytes into a `Vec<u8>`
+    pub fn read_fixed_bytes(&mut self, len: usize) -> Result<Vec<u8>, Error> {
         self.verify_len(len)?;
         let mut buf = vec![0u8; len];
         self.reader.read_exact(&mut buf)?;
         Ok(buf)
-    }
-
-    fn verify_len(&mut self, len: usize) -> Result<(), Error> {
-        if len > self.alloc_limit_bytes {
-            Err(Error::new(
-                ErrorKind::InvalidData,
-                format!(
-                    "length of string is too large ({len} bytes): surpassed the default (customizable) limit of {} bytes",
-                    self.alloc_limit_bytes
-                ),
-            ))
-        } else {
-            Ok(())
-        }
     }
 
     /// Reads a UTF-8 string prefixed by a length (number of bytes) of type `<E>`.
@@ -36,8 +27,12 @@ impl<T: Read> Muncher<T> {
     ///
     /// For more info on endianness see [`crate::End`].
     pub fn read_pref_utf8<E: ReadEndian>(&mut self, end: End) -> Result<String, Error> {
-        String::from_utf8(self.read_pref_bytes::<E>(end)?)
-            .map_err(|e| Error::new(ErrorKind::InvalidData, e))
+        bytes2utf8(self.read_pref_bytes::<E>(end)?)
+    }
+
+    /// Reads `len` number of bytes into a UTF-8 [`String`].
+    pub fn read_fixed_utf8(&mut self, len: usize) -> Result<String, Error> {
+        bytes2utf8(self.read_fixed_bytes(len)?)
     }
 
     /// Reads a UCS-2 string prefixed by a length (number of characters) in the type `<E>`.
@@ -50,6 +45,12 @@ impl<T: Read> Muncher<T> {
     /// For more info on endianness see [`crate::End`].
     pub fn read_pref_ucs2<E: ReadEndian>(&mut self, end: End) -> Result<String, Error> {
         let char_count = self.read_m::<E>(end)?.into_usize();
+        self.read_fixed_ucs2(char_count)
+    }
+
+    /// Reads `char_count` number of 16-bit characters as a UCS-2 string,
+    /// and converts it to UTF-8 [`String`].
+    pub fn read_fixed_ucs2(&mut self, char_count: usize) -> Result<String, Error> {
         self.verify_len(char_count * 2)?;
         let mut result = String::with_capacity(char_count);
 
@@ -67,6 +68,20 @@ impl<T: Read> Muncher<T> {
         }
 
         Ok(result)
+    }
+
+    fn verify_len(&mut self, len: usize) -> Result<(), Error> {
+        if len > self.alloc_limit_bytes {
+            Err(Error::new(
+                ErrorKind::InvalidData,
+                format!(
+                    "length of string is too large ({len} bytes): surpassed the default (customizable) limit of {} bytes",
+                    self.alloc_limit_bytes
+                ),
+            ))
+        } else {
+            Ok(())
+        }
     }
 }
 
@@ -105,7 +120,7 @@ impl<T: BufRead> Muncher<T> {
     /// see [`Muncher::read_cstr_bytes`].
     pub fn read_cstr_utf8(&mut self) -> Result<String, Error> {
         let buf = self.read_cstr_bytes()?;
-        String::from_utf8(buf).map_err(|e| Error::new(ErrorKind::InvalidData, e))
+        bytes2utf8(buf)
     }
 
     /// Reads a line of UTF8 string (tries to parse, fails if invalid).
@@ -126,4 +141,8 @@ impl<T: BufRead> Muncher<T> {
         self.reader.read_until(delim, &mut buf)?;
         Ok(buf)
     }
+}
+
+fn bytes2utf8(bytes: Vec<u8>) -> Result<String, Error> {
+    String::from_utf8(bytes).map_err(|e| Error::new(ErrorKind::InvalidData, e))
 }
