@@ -9,3 +9,6 @@ mutf8 = { version = "0.5", default-features = false, optional = true }
 [features]
 default = ["mutf8"]
 mutf8 = ["dep:mutf8"]
+
+[profile.dev.package."*"]
+opt-level = 3

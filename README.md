@@ -97,7 +97,7 @@ impl<T: Read> ParseVec2 for Muncher<T> {
 
 # TODO
 - [x] Add MUTF-8 support (crate feature: `mutf8`)
-- [ ] Add examples for strings
+- [x] Add examples for strings
 - [ ] Add test suite
 - [ ] Add `tokio` async read support
 - [ ] Add destinations for reading strings into
