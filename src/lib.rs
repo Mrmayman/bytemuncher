@@ -99,7 +99,7 @@ mod traits;
 ///
 /// More destinations may come in future versions.
 pub struct Muncher<T> {
-    reader: T,
+    inner: T,
     alloc_limit_bytes: usize,
 }
 
@@ -117,9 +117,9 @@ impl<T> Muncher<T> {
     /// Muncher::new(std::io::Cursor::new(SOMETHING))
     /// # ;
     /// ```
-    pub fn new(reader: T) -> Self {
+    pub fn new(inner: T) -> Self {
         Self {
-            reader,
+            inner,
             alloc_limit_bytes: 1024 * 1024 * 1024,
         }
     }

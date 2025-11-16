@@ -33,7 +33,7 @@ impl<T: std::io::Read> Muncher<T> {
     ///
     /// For more info on endianness see [`crate::End`].
     pub fn read_m<E: ReadEndian>(&mut self, end: End) -> Result<E, std::io::Error> {
-        E::read_endian(&mut self.reader, end)
+        E::read_endian(&mut self.inner, end)
     }
 
     /// Reads any [`crate::ReadEndian`] type (such as integers or floats),

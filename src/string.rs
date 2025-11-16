@@ -17,7 +17,7 @@ impl<T: Read> Muncher<T> {
     pub fn read_fixed_bytes(&mut self, len: usize) -> Result<Vec<u8>, Error> {
         self.verify_len(len)?;
         let mut buf = vec![0u8; len];
-        self.reader.read_exact(&mut buf)?;
+        self.inner.read_exact(&mut buf)?;
         Ok(buf)
     }
 
@@ -113,7 +113,7 @@ impl<T: BufRead> Muncher<T> {
     /// see [`Muncher::read_cstr_utf8`].
     pub fn read_cstr_bytes(&mut self) -> Result<Vec<u8>, Error> {
         let mut buf = Vec::new();
-        let bytes_read = self.reader.read_until(0, &mut buf)?;
+        let bytes_read = self.inner.read_until(0, &mut buf)?;
 
         if bytes_read == 0 {
             return Err(Error::new(
@@ -143,7 +143,7 @@ impl<T: BufRead> Muncher<T> {
     /// This reads until a `\n` newline or an end-of-file is reached.
     pub fn read_line_utf8(&mut self) -> Result<String, Error> {
         let mut buf = String::new();
-        self.reader.read_line(&mut buf)?;
+        self.inner.read_line(&mut buf)?;
         Ok(buf)
     }
 
@@ -154,7 +154,7 @@ impl<T: BufRead> Muncher<T> {
     /// byte if found.
     pub fn read_delim_bytes(&mut self, delim: u8) -> Result<Vec<u8>, Error> {
         let mut buf = Vec::new();
-        self.reader.read_until(delim, &mut buf)?;
+        self.inner.read_until(delim, &mut buf)?;
         Ok(buf)
     }
 }
