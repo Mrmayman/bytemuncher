@@ -5,10 +5,13 @@ edition = "2024"
 
 [dependencies]
 mutf8 = { version = "0.5", default-features = false, optional = true }
-ucs2 = "0.3"
+ucs2 = {version = "0.3", optional = true}
 
 [features]
-default = ["mutf8"]
+default = ["mutf8", "ucs2"]
+
+# String formats:
+ucs2 = ["dep:ucs2"]
 mutf8 = ["dep:mutf8"]
 
 [profile.dev.package."*"]

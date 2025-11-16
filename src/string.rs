@@ -43,6 +43,7 @@ impl<T: Read> Muncher<T> {
     /// Through the `end` argument you can choose the endianness of the length field.
     ///
     /// For more info on endianness see [`crate::End`].
+    #[cfg(feature = "ucs2")]
     pub fn read_pref_ucs2<E: Primitive>(&mut self, end: End) -> Result<String, Error> {
         let char_count = self.read_m::<E>(end)?.into_usize();
         self.read_fixed_ucs2(char_count)
@@ -50,6 +51,7 @@ impl<T: Read> Muncher<T> {
 
     /// Reads `char_count` number of 16-bit characters as a UCS-2 string,
     /// and converts it to UTF-8 [`String`].
+    #[cfg(feature = "ucs2")]
     pub fn read_fixed_ucs2(&mut self, char_count: usize) -> Result<String, Error> {
         self.verify_len(char_count * 2)?;
         let mut result = Vec::with_capacity(char_count);
@@ -65,6 +67,7 @@ impl<T: Read> Muncher<T> {
     }
 }
 
+#[cfg(feature = "ucs2")]
 fn usc2err(n: ucs2::Error) -> Error {
     Error::new(ErrorKind::InvalidData, n.to_string())
 }
@@ -183,6 +186,7 @@ impl<T: Write> Muncher<T> {
     /// Through the `end` argument you can choose the endianness of the length field.
     ///
     /// For more info on endianness see [`crate::End`].
+    #[cfg(feature = "ucs2")]
     pub fn write_pref_ucs2<E: Primitive + From<usize>>(
         &mut self,
         end: End,
