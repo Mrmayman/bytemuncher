@@ -1,8 +1,8 @@
-use super::ReadEndian;
+use super::Primitive;
 
 macro_rules! impl_float {
     ($type:ty, $int:ty) => {
-        impl ReadEndian for $type {
+        impl Primitive for $type {
             fn read_endian(
                 reader: &mut impl std::io::Read,
                 end: crate::End,
@@ -15,6 +15,20 @@ macro_rules! impl_float {
                     <$int>::from_be_bytes(buf)
                 };
                 Ok(Self::from_bits(bits))
+            }
+
+            fn write_endian(
+                self,
+                writer: &mut impl std::io::Write,
+                end: crate::End,
+            ) -> Result<(), std::io::Error> {
+                let bytes = if end.is_le() {
+                    self.to_le_bytes()
+                } else {
+                    self.to_be_bytes()
+                };
+                writer.write_all(&bytes)?;
+                Ok(())
             }
 
             #[allow(clippy::cast_sign_loss)]

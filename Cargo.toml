@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 mutf8 = { version = "0.5", default-features = false, optional = true }
+ucs2 = "0.3"
 
 [features]
 default = ["mutf8"]

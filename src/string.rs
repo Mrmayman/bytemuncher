@@ -1,14 +1,14 @@
-use crate::{End, Muncher, ReadEndian};
-use std::io::{BufRead, Error, ErrorKind, Read};
+use crate::{End, Muncher, Primitive};
+use std::io::{BufRead, Error, ErrorKind, Read, Write};
 
-/// **Size-prefixed string methods**
+/// **Size-prefixed string read methods**
 impl<T: Read> Muncher<T> {
     /// Reads some bytes prefixed by a length (number of bytes) of type `<E>`.
     ///
     /// Through the `end` argument you can choose the endianness of the length field.
     ///
     /// For more info on endianness see [`crate::End`].
-    pub fn read_pref_bytes<E: ReadEndian>(&mut self, end: End) -> Result<Vec<u8>, Error> {
+    pub fn read_pref_bytes<E: Primitive>(&mut self, end: End) -> Result<Vec<u8>, Error> {
         let len = self.read_m::<E>(end)?.into_usize();
         self.read_fixed_bytes(len)
     }
@@ -26,7 +26,7 @@ impl<T: Read> Muncher<T> {
     /// Through the `end` argument you can choose the endianness of the length field.
     ///
     /// For more info on endianness see [`crate::End`].
-    pub fn read_pref_utf8<E: ReadEndian>(&mut self, end: End) -> Result<String, Error> {
+    pub fn read_pref_utf8<E: Primitive>(&mut self, end: End) -> Result<String, Error> {
         bytes2utf8(self.read_pref_bytes::<E>(end)?)
     }
 
@@ -43,7 +43,7 @@ impl<T: Read> Muncher<T> {
     /// Through the `end` argument you can choose the endianness of the length field.
     ///
     /// For more info on endianness see [`crate::End`].
-    pub fn read_pref_ucs2<E: ReadEndian>(&mut self, end: End) -> Result<String, Error> {
+    pub fn read_pref_ucs2<E: Primitive>(&mut self, end: End) -> Result<String, Error> {
         let char_count = self.read_m::<E>(end)?.into_usize();
         self.read_fixed_ucs2(char_count)
     }
@@ -52,53 +52,21 @@ impl<T: Read> Muncher<T> {
     /// and converts it to UTF-8 [`String`].
     pub fn read_fixed_ucs2(&mut self, char_count: usize) -> Result<String, Error> {
         self.verify_len(char_count * 2)?;
-        let mut result = String::with_capacity(char_count);
+        let mut result = Vec::with_capacity(char_count);
 
+        let mut chars: Vec<u16> = Vec::new();
         for _ in 0..char_count {
-            let ch = self.read_be::<u16>()?; // UCS-2 is always big-endian
-
-            // Based on:
-            // https://github.com/rust-osdev/ucs2-rs/blob/aa837529a4999e8c7eacb326fd153cc52792814b/src/lib.rs#L151
-            match ch {
-                0..128 => {
-                    #[allow(clippy::cast_possible_truncation)]
-                    result.push(ch as u8 as char);
-                }
-                128..2048 => {
-                    let first = 0b1100_0000 + ((ch >> 6) & 0b0001_1111) as u8;
-                    let last = 0b1000_0000 + (ch & 0b0011_1111) as u8;
-
-                    result.push(first as char);
-                    result.push(last as char);
-                }
-                _ => {
-                    let first = 0b1110_0000 + ((ch >> 12) & 0b0000_1111) as u8;
-                    let mid = 0b1000_0000 + ((ch >> 6) & 0b0011_1111) as u8;
-                    let last = 0b1000_0000 + (ch & 0b0011_1111) as u8;
-
-                    result.push(first as char);
-                    result.push(mid as char);
-                    result.push(last as char);
-                }
-            }
+            let ch = self.read_be()?;
+            chars.push(ch);
         }
 
-        Ok(result)
+        ucs2::decode_with(&chars, |out| Ok(result.extend(out))).map_err(usc2err)?;
+        bytes2utf8(result)
     }
+}
 
-    fn verify_len(&mut self, len: usize) -> Result<(), Error> {
-        if len > self.alloc_limit_bytes {
-            Err(Error::new(
-                ErrorKind::InvalidData,
-                format!(
-                    "length of string is too large ({len} bytes): surpassed the default (customizable) limit of {} bytes",
-                    self.alloc_limit_bytes
-                ),
-            ))
-        } else {
-            Ok(())
-        }
-    }
+fn usc2err(n: ucs2::Error) -> Error {
+    Error::new(ErrorKind::InvalidData, n.to_string())
 }
 
 /// **String and buffer related methods that require `T: `[`std::io::BufRead`]**
@@ -161,4 +129,69 @@ impl<T: BufRead> Muncher<T> {
 
 fn bytes2utf8(bytes: Vec<u8>) -> Result<String, Error> {
     String::from_utf8(bytes).map_err(|e| Error::new(ErrorKind::InvalidData, e))
+}
+
+// ================================
+// WRITING
+// ================================
+
+/// **Size-prefixed string methods**
+impl<T: Write> Muncher<T> {
+    pub fn write_fixed_u16(&mut self, ucs: &[u16]) -> Result<(), Error> {
+        for c in ucs {
+            self.write_be(*c)?;
+        }
+        Ok(())
+    }
+
+    /// Writes some bytes prefixed by a length (number of bytes) of type `<E>`.
+    ///
+    /// Through the `end` argument you can choose the endianness of the length field.
+    ///
+    /// For more info on endianness see [`crate::End`].
+    pub fn write_pref_bytes<E: Primitive + From<usize>>(
+        &mut self,
+        end: End,
+        buf: &[u8],
+    ) -> Result<(), Error> {
+        self.write_m::<E>(E::from(buf.len()), end)?;
+        self.write(buf)?;
+        Ok(())
+    }
+
+    /// Writes some bytes, with a null terminator.
+    ///
+    /// Through the `end` argument you can choose the endianness of the length field.
+    ///
+    /// For more info on endianness see [`crate::End`].
+    pub fn write_cstr_bytes<E: Primitive + From<usize>>(
+        &mut self,
+        buf: &[u8],
+    ) -> Result<(), Error> {
+        self.write(buf)?;
+        if !buf.ends_with(&[0]) {
+            self.write_le(0u8)?;
+        }
+        Ok(())
+    }
+
+    /// Reads a UCS-2 string prefixed by a length (number of characters) in the type `<E>`.
+    ///
+    /// UCS-2 consists of big endian 16-bit words, each of which represent a Unicode
+    /// code point between U+0000 and U+FFFF inclusive.
+    ///
+    /// Through the `end` argument you can choose the endianness of the length field.
+    ///
+    /// For more info on endianness see [`crate::End`].
+    pub fn write_pref_ucs2<E: Primitive + From<usize>>(
+        &mut self,
+        end: End,
+        msg: &str,
+    ) -> Result<(), Error> {
+        let mut out = Vec::new();
+        ucs2::encode_with(msg, |n| Ok(out.push(n))).map_err(usc2err)?;
+        self.write_m::<E>(E::from(out.len()), end)?;
+        self.write_fixed_u16(&out)?;
+        Ok(())
+    }
 }

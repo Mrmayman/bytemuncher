@@ -3,10 +3,17 @@
 version = 4
 
 [[package]]
+name = "bit_field"
+version = "0.10.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e4b40c7323adcfc0a41c4b88143ed58346ff65a288fc144329c5c45e05d70c6"
+
+[[package]]
 name = "bytemuncher"
 version = "0.1.0"
 dependencies = [
  "mutf8",
+ "ucs2",
 ]
 
 [[package]]
@@ -14,3 +21,12 @@ name = "mutf8"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "45441cbf2f79a8974091e9e78cf9d0fd19fb15641e7969dfcc42d18eb855f5f3"
+
+[[package]]
+name = "ucs2"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df79298e11f316400c57ec268f3c2c29ac3c4d4777687955cd3d4f3a35ce7eba"
+dependencies = [
+ "bit_field",
+]

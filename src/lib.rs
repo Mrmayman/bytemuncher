@@ -8,13 +8,13 @@ mod io_read;
 mod string;
 mod traits;
 
-/// A helpful wrapper around any [`std::io::Read`] type.
+/// A helpful wrapper around any [`std::io::Read`] / [`std::io::Write`] type.
 ///
-/// You can put in any [`std::io::Read`] type and get access to the additional
-/// bytemuncher methods for it, such as:
-/// - Reading various signed/unsigned integer types in various endianness (see [`End`]).
-/// - Reading floating point values in various endianness.
-/// - Reading strings in various formats (UTF-8, MUTF-8, UCS-2, raw bytes)
+/// You can put in any `Read`/`Write` type and get access to the additional
+/// bytemuncher methods for it, to read/write:
+/// - Various signed/unsigned integer types in various endianness (see [`End`]).
+/// - Floating point values in various endianness.
+/// - Strings in various formats (UTF-8, MUTF-8, UCS-2, raw bytes)
 ///   from various storage types (Null terminated, length prefix, fixed size, newline, ...)
 ///
 /// You can put in any [`std::io::BufRead`] type, or use a [`std::io::BufReader`]
@@ -55,7 +55,7 @@ mod traits;
 ///
 /// # Note on strings
 /// The string-related methods are named in the
-/// `read_<format>_<encoding>[_destination]` naming convention.
+/// `(read/write)_<format>_<encoding>[_destination]` naming convention.
 ///
 /// These are useful not just for strings but for reading any
 /// arbitrary byte buffers with different length encodings.
@@ -135,6 +135,20 @@ impl<T> Muncher<T> {
     pub fn set_max_alloc(&mut self, alloc_limit_bytes: usize) -> &mut Self {
         self.alloc_limit_bytes = alloc_limit_bytes;
         self
+    }
+
+    pub(crate) fn verify_len(&mut self, len: usize) -> Result<(), std::io::Error> {
+        if len > self.alloc_limit_bytes {
+            Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!(
+                    "length of string is too large ({len} bytes): surpassed the default (customizable) limit of {} bytes",
+                    self.alloc_limit_bytes
+                ),
+            ))
+        } else {
+            Ok(())
+        }
     }
 }
 
@@ -242,12 +256,12 @@ pub const IS_TARGET_LITTLE_ENDIAN: bool = false;
 
 #[cfg(feature = "mutf8")]
 pub use mutf::MutfError;
-/// Important exports of the `mutf8` crate
-#[cfg(feature = "mutf8")]
-pub mod mutf_8 {
-    pub use mutf8::error::Error as MutfInnerError;
-    pub use mutf8::error::{Expected, Mode, Position};
-    pub use mutf8::{mutf8_to_utf8, utf8_to_mutf8};
-}
+// /// Important exports of the `mutf8` crate
+// #[cfg(feature = "mutf8")]
+// pub mod mutf_8 {
+//     pub use mutf8::error::Error as MutfInnerError;
+//     pub use mutf8::error::{Expected, Mode, Position};
+//     pub use mutf8::{mutf8_to_utf8, utf8_to_mutf8};
+// }
 
-pub use traits::ReadEndian;
+pub use traits::Primitive;

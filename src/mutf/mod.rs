@@ -1,6 +1,6 @@
 use std::io::{BufRead, Read};
 
-use crate::{End, Muncher, ReadEndian};
+use crate::{End, Muncher, Primitive};
 
 mod error;
 
@@ -20,7 +20,7 @@ impl<T: Read> Muncher<T> {
     /// For more info on endianness see [`crate::End`].
     ///
     /// For more info on MUTF-8 see <https://crates.io/crates/mutf8>.
-    pub fn read_pref_mutf8<E: ReadEndian>(&mut self, end: End) -> Result<String, MutfError> {
+    pub fn read_pref_mutf8<E: Primitive>(&mut self, end: End) -> Result<String, MutfError> {
         let buf = self.read_pref_bytes::<E>(end)?;
         mutf2utf(&buf)
     }
@@ -33,7 +33,7 @@ impl<T: Read> Muncher<T> {
     /// If you want raw MUTF-8, use [`Muncher::read_fixed_bytes`].
     ///
     /// For more info on MUTF-8 see <https://crates.io/crates/mutf8>.
-    pub fn read_fixed_mutf8<E: ReadEndian>(&mut self, len: usize) -> Result<String, MutfError> {
+    pub fn read_fixed_mutf8<E: Primitive>(&mut self, len: usize) -> Result<String, MutfError> {
         let buf = self.read_fixed_bytes(len)?;
         mutf2utf(&buf)
     }
