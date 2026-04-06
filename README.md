@@ -48,6 +48,8 @@ assert_eq!(muncher.read_cstr_utf8().unwrap(), "hello world");
 assert_eq!(muncher.read_cstr_utf8().unwrap(), "goodbye world");
 ```
 
+You can also run the test suite by doing `cargo test`
+
 ---
 
 # Async
@@ -120,7 +122,6 @@ impl<T: Read + Write> ParseVec2 for Muncher<T> {
 ```
 
 # TODO
-- [ ] Add test suite
-- [ ] Add `tokio` async read support
+
 - [ ] Add destinations for reading strings into
 - [ ] Optional rewind/seek feature for any io type

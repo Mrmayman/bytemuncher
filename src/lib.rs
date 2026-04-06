@@ -6,6 +6,8 @@ mod mutf;
 
 mod io_traits;
 mod string;
+#[cfg(test)]
+mod tests;
 mod traits;
 
 #[cfg(all(feature = "tokio", feature = "futures"))]

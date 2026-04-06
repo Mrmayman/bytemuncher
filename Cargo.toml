@@ -17,10 +17,12 @@ futures = { version = "0.3", default-features = false, optional = true, features
 default = ["mutf8", "ucs2"]
 
 # String formats:
+
 ucs2 = ["dep:ucs2"]
 mutf8 = ["dep:mutf8"]
 
 # Async backends:
+
 tokio = ["dep:tokio"]
 futures = ["dep:futures"]
 
