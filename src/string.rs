@@ -275,12 +275,8 @@ impl<T: Write> Muncher<T> {
     /// Through the `end` argument you can choose the endianness of the length field.
     ///
     /// For more info on endianness see [`crate::End`].
-    pub fn write_pref_bytes<E: Primitive + From<usize>>(
-        &mut self,
-        end: End,
-        buf: &[u8],
-    ) -> Result<(), Error> {
-        self.write_m::<E>(E::from(buf.len()), end)?;
+    pub fn write_pref_bytes<E: Primitive>(&mut self, end: End, buf: &[u8]) -> Result<(), Error> {
+        self.write_m::<E>(E::from_usize(buf.len()), end)?;
         self.write(buf)?;
         Ok(())
     }
@@ -303,14 +299,10 @@ impl<T: Write> Muncher<T> {
     ///
     /// For more info on endianness see [`crate::End`].
     #[cfg(feature = "ucs2")]
-    pub fn write_pref_ucs2<E: Primitive + From<usize>>(
-        &mut self,
-        end: End,
-        msg: &str,
-    ) -> Result<(), Error> {
+    pub fn write_pref_ucs2<E: Primitive>(&mut self, end: End, msg: &str) -> Result<(), Error> {
         let mut out = Vec::new();
         ucs2::encode_with(msg, |n| Ok(out.push(n))).map_err(usc2err)?;
-        self.write_m::<E>(E::from(out.len()), end)?;
+        self.write_m::<E>(E::from_usize(out.len()), end)?;
         self.write_fixed_u16(&out, End::Big)?;
         Ok(())
     }
@@ -332,12 +324,12 @@ impl<T: AsyncWriteExt + Unpin> Muncher<T> {
     /// Through the `end` argument you can choose the endianness of the length field.
     ///
     /// For more info on endianness see [`crate::End`].
-    pub async fn write_pref_bytes_a<E: AsyncPrimitive + From<usize>>(
+    pub async fn write_pref_bytes_a<E: AsyncPrimitive>(
         &mut self,
         end: End,
         buf: &[u8],
     ) -> Result<(), Error> {
-        self.write_m_a::<E>(E::from(buf.len()), end).await?;
+        self.write_m_a::<E>(E::from_usize(buf.len()), end).await?;
         self.write(buf).await?;
         Ok(())
     }
@@ -360,14 +352,14 @@ impl<T: AsyncWriteExt + Unpin> Muncher<T> {
     ///
     /// For more info on endianness see [`crate::End`].
     #[cfg(feature = "ucs2")]
-    pub async fn write_pref_ucs2_a<E: AsyncPrimitive + From<usize>>(
+    pub async fn write_pref_ucs2_a<E: AsyncPrimitive>(
         &mut self,
         end: End,
         msg: &str,
     ) -> Result<(), Error> {
         let mut out = Vec::new();
         ucs2::encode_with(msg, |n| Ok(out.push(n))).map_err(usc2err)?;
-        self.write_m_a::<E>(E::from(out.len()), end).await?;
+        self.write_m_a::<E>(E::from_usize(out.len()), end).await?;
         self.write_fixed_u16_a(&out, End::Big).await?;
         Ok(())
     }

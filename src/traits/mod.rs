@@ -20,7 +20,8 @@ pub trait Primitive {
     where
         Self: Sized;
 
-    /// Try to "semantically" convert your type to usize.
+    /// Try to "semantically" convert your type to `usize`.
+    ///
     /// Any overflows, truncations and stuff can be ignored.
     ///
     /// If your type isn't really a number
@@ -29,6 +30,17 @@ pub trait Primitive {
     /// For an idea of how to use this, this will
     /// primarily be used for array length.
     fn into_usize(self) -> usize;
+
+    /// Try to "semantically" convert from `usize`.
+    ///
+    /// Any overflows, truncations and stuff can be ignored.
+    ///
+    /// If your type isn't really a number
+    /// feel free to return the default value (eg: 0).
+    ///
+    /// For an idea of how to use this, this will
+    /// primarily be used for array length.
+    fn from_usize(n: usize) -> Self;
 }
 
 #[cfg(feature = "futures")]

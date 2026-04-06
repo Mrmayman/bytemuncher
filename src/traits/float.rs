@@ -45,6 +45,10 @@ macro_rules! impl_float {
             fn into_usize(self) -> usize {
                 self as usize
             }
+
+            fn from_usize(n: usize) -> Self {
+                n as Self
+            }
         }
 
         #[cfg(any(feature = "tokio", feature = "futures"))]

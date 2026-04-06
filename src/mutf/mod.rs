@@ -125,7 +125,7 @@ impl<T: Write> Muncher<T> {
     /// Through the `end` argument you can choose the endianness of the length field.
     ///
     /// For more info on endianness see [`crate::End`].
-    pub fn write_pref_mutf8<P: Primitive + From<usize>>(
+    pub fn write_pref_mutf8<P: Primitive>(
         &mut self,
         mutf: &str,
         end: End,
@@ -154,7 +154,7 @@ impl<T: AsyncWriteExt + Unpin> Muncher<T> {
     /// Through the `end` argument you can choose the endianness of the length field.
     ///
     /// For more info on endianness see [`crate::End`].
-    pub async fn write_pref_mutf8_a<P: AsyncPrimitive + From<usize>>(
+    pub async fn write_pref_mutf8_a<P: AsyncPrimitive>(
         &mut self,
         mutf: &str,
         end: End,

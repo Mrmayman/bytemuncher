@@ -38,6 +38,10 @@ macro_rules! impl_small_int {
             fn into_usize(self) -> usize {
                 self as usize
             }
+
+            fn from_usize(n: usize) -> Self {
+                n as Self
+            }
         }
 
         #[cfg(any(feature = "tokio", feature = "futures"))]
@@ -105,6 +109,10 @@ macro_rules! impl_int {
             #[allow(clippy::cast_possible_truncation)]
             fn into_usize(self) -> usize {
                 self as usize
+            }
+
+            fn from_usize(n: usize) -> Self {
+                n as Self
             }
         }
 
