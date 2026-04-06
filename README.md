@@ -65,7 +65,9 @@ It may use `AsyncRead`, `AsyncWrite`, and `AsyncBufRead`.
 `byteorder` and `bytemuncher` have similar, but slightly divergent goals.
 
 - This crate helps with many kinds of string parsing, byteorder does not
-- This crate has a particular focus on file parsing and network operations, and is helpful for that specifically. Hence it supports many string formats as well as (in the future) async I/O
+- Mainly focused on file parsing and network operations, and is helpful for that specifically, so:
+  - Native async support
+  - Wide string format support
 - In general, byteorder is generic for many use cases, this is more specific in what it wants to be
 
 # Extensibility
