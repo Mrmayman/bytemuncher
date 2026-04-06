@@ -8,10 +8,12 @@ in the `bytemuncher::Muncher<T>` type and be able to read/write:
 - Strings in various formats (UTF-8, MUTF-8, UCS-2, raw bytes)
   from various storage types (Null terminated, length prefix, newline, ...)
 
-For more information, see the documentation of `bytemuncher::Muncher` and its methods.
+**For more information, see the documentation of `bytemuncher::Muncher` and its methods.**
 
 # Example
+
 ## Numbers
+
 ```rust
 use bytemuncher::Muncher;
 use std::io::Cursor;
@@ -34,6 +36,7 @@ assert!(muncher.read_le::<u8>().is_err());
 ```
 
 ## Strings
+
 ```rust
 use bytemuncher::Muncher;
 use std::io::Cursor;
@@ -45,7 +48,18 @@ assert_eq!(muncher.read_cstr_utf8().unwrap(), "hello world");
 assert_eq!(muncher.read_cstr_utf8().unwrap(), "goodbye world");
 ```
 
+---
+
+# Async
+
+This crate supports async, either through crate feature
+`tokio` or `futures` (**not both**). All your methods are there,
+just add `_a` to the end of their names.
+
+It may use `AsyncRead`, `AsyncWrite`, and `AsyncBufRead`.
+
 # Why not [byteorder](https://crates.io/crate/byteorder)?
+
 `byteorder` and `bytemuncher` have similar, but slightly divergent goals.
 
 - This crate helps with many kinds of string parsing, byteorder does not
@@ -53,6 +67,7 @@ assert_eq!(muncher.read_cstr_utf8().unwrap(), "goodbye world");
 - In general, byteorder is generic for many use cases, this is more specific in what it wants to be
 
 # Extensibility
+
 You must be wondering, why was this implemented as a `Muncher` struct
 instead of some kind of `ReadExt`/`WriteExt` trait. This design favors library
 simplicity and ease of use

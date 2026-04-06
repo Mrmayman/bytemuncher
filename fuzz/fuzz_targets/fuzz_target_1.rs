@@ -13,6 +13,5 @@ fuzz_target!(|data: &[u8]| {
 
     let _ = muncher.read_cstr_bytes();
     let _ = muncher.read_cstr_utf8();
-    let _ = muncher.read_line_utf8();
     let _ = muncher.read_pref_utf8::<u64>(End::Little);
 });

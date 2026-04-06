@@ -4,9 +4,14 @@
 #[cfg(feature = "mutf8")]
 mod mutf;
 
-mod io_read;
+mod io_traits;
 mod string;
 mod traits;
+
+#[cfg(all(feature = "tokio", feature = "futures"))]
+compile_error!(
+    "Feature 'tokio' and 'futures' are mutually exclusive (both were enabled). Please choose one. If you somehow need both, try `tokio_util::compat`"
+);
 
 /// A helpful wrapper around any [`std::io::Read`] / [`std::io::Write`] type.
 ///
@@ -21,6 +26,7 @@ mod traits;
 /// inside a `Muncher<T>` for extra features (shown later below).
 ///
 /// # Example
+///
 /// ```
 /// use bytemuncher::Muncher;
 /// use std::io::Cursor;
@@ -44,6 +50,7 @@ mod traits;
 /// For more examples see the crate documentation.
 ///
 /// # Errors
+///
 /// All methods return [`std::io::Error`] on failure, except
 /// for MUTF-8 methods (crate feature: `mutf8`) which return `MutfError`
 /// on failure.
@@ -54,6 +61,7 @@ mod traits;
 /// - Invalid encoding (e.g., malformed UTF-8 or MUTF-8)
 ///
 /// # Note on strings
+///
 /// The string-related methods are named in the
 /// `(read/write)_<format>_<encoding>[_destination]` naming convention.
 ///
@@ -61,6 +69,7 @@ mod traits;
 /// arbitrary byte buffers with different length encodings.
 ///
 /// ## Format
+///
 /// Specifies how the size of the string is found.
 /// It can be one of:
 /// - `fixed`: You manually specify the size of the string as an argument.
@@ -72,8 +81,10 @@ mod traits;
 ///   is met or the input has ended, and returns a string containing the byte if found.
 ///
 /// ## Encoding
+///
 /// Specifies the character encoding of the string.
 /// It can be one of:
+///
 /// - `bytes`: Returns a raw `Vec<u8>` containing the bytes,
 ///   feel free to interpret as you wish.
 /// - `utf8`: Reads and returns a UTF-8 encoded [`String`]
@@ -90,6 +101,7 @@ mod traits;
 /// a Unicode code point between U+0000 and U+FFFF inclusive.
 ///
 /// ## Destination (optional)
+///
 /// Specifies where to store the output data to.
 /// - (None specified): Allocates a new heap allocated buffer
 ///   ([`String`] or [`Vec`])
@@ -264,4 +276,6 @@ pub use mutf::MutfError;
 //     pub use mutf8::{mutf8_to_utf8, utf8_to_mutf8};
 // }
 
+#[cfg(any(feature = "tokio", feature = "futures"))]
+pub use traits::AsyncPrimitive;
 pub use traits::Primitive;
